@@ -3,6 +3,7 @@
  */
 var http = require("http");
 var url = require("url");
+var formidable = require("formidable");
 /** @namespace http.createServer */
 //http.createServer(function(request, response) {
 //    response.writeHead(200, {"Content-Type": "text/plain"});
@@ -13,17 +14,23 @@ var url = require("url");
 //execute your working HTTP server by running node server.js
 function start(route, handle) {
     function onRequest(request, response) {
+        var postData = '';
         console.log("Request received");
         //console.log(request.url);
         var pathname = url.parse(request.url).pathname;
         console.log("Request for " + pathname + " received");
+        request.setEncoding("utf8");
 
-        //response.writeHead(200, {"Content-Type": "text/plain"});
-        //var content = route(handle, pathname);
-        //response.write(content);
-        //response.end();
+        request.addListener("data", function(postDataChunk) {
+            postData += postDataChunk;
+            console.log("Received POST data chunk " + postDataChunk);
+        });
 
-        route(handle, pathname, response);
+        request.addListener("end", function() {
+            route(handle, pathname, response, postData);
+        });
+
+
     }
 
     http.createServer(onRequest).listen(8888);
